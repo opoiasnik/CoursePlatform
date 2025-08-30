@@ -24,9 +24,9 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                 </button>
 
                 {isLoginMode ? (
-                    <LoginForm onToggleMode={toggleMode} />
+                    <LoginForm onToggleMode={toggleMode} onSuccess={onClose} />
                 ) : (
-                    <RegisterForm onToggleMode={toggleMode} />
+                    <RegisterForm onToggleMode={toggleMode} onSuccess={onClose} />
                 )}
             </div>
         </div>

@@ -6,9 +6,10 @@ import { RegisterFormData } from '../../types';
 
 interface RegisterFormProps {
     onToggleMode: () => void;
+    onSuccess: () => void;
 }
 
-export const RegisterForm = ({ onToggleMode }: RegisterFormProps) => {
+export const RegisterForm = ({ onToggleMode, onSuccess }: RegisterFormProps) => {
     const dispatch = useDispatch();
     const [formData, setFormData] = useState<RegisterFormData>({
         email: '',
@@ -65,6 +66,7 @@ export const RegisterForm = ({ onToggleMode }: RegisterFormProps) => {
                 email: formData.email,
             }));
             setIsSubmitting(false);
+            onSuccess();
         }, 1000);
     };
 

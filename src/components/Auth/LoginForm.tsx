@@ -6,9 +6,10 @@ import { LoginFormData } from '../../types';
 
 interface LoginFormProps {
     onToggleMode: () => void;
+    onSuccess: () => void;
 }
 
-export const LoginForm = ({ onToggleMode }: LoginFormProps) => {
+export const LoginForm = ({ onToggleMode, onSuccess }: LoginFormProps) => {
     const dispatch = useDispatch();
     const [formData, setFormData] = useState<LoginFormData>({
         email: '',
@@ -55,6 +56,7 @@ export const LoginForm = ({ onToggleMode }: LoginFormProps) => {
                 email: formData.email,
             }));
             setIsSubmitting(false);
+            onSuccess();
         }, 1000);
     };
 
