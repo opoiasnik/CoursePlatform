@@ -51,12 +51,18 @@ export const LoginForm = ({ onToggleMode, onSuccess }: LoginFormProps) => {
         setIsSubmitting(true);
 
         setTimeout(() => {
-            dispatch(login({
-                id: Date.now().toString(),
-                email: formData.email,
-            }));
-            setIsSubmitting(false);
-            onSuccess();
+            const existingUserKey = `user_${formData.email}`;
+            const existingUser = localStorage.getItem(existingUserKey);
+
+            if (existingUser) {
+                const userData = JSON.parse(existingUser);
+                dispatch(login(userData));
+                setIsSubmitting(false);
+                onSuccess();
+            } else {
+                setErrors({ email: 'User not found. Please register first.' });
+                setIsSubmitting(false);
+            }
         }, 1000);
     };
 

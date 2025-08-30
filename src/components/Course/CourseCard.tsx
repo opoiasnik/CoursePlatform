@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../store';
 import { purchaseCourse, setCurrentVideo } from '../../store/slices/courseSlice';
+import { updateBalance } from '../../store/slices/authSlice';
 import { Course } from '../../types';
+import { BalanceModal } from '../UI/BalanceModal';
 
 interface CourseCardProps {
     course: Course;
@@ -12,8 +14,9 @@ interface CourseCardProps {
 
 export const CourseCard = ({ course, onVideoPlay, onAuthRequired }: CourseCardProps) => {
     const dispatch = useDispatch<AppDispatch>();
-    const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+    const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
     const { purchasedCourses, loading } = useSelector((state: RootState) => state.courses);
+    const [showBalanceModal, setShowBalanceModal] = useState(false);
 
     const isPurchased = purchasedCourses.includes(course.id);
 
@@ -23,8 +26,14 @@ export const CourseCard = ({ course, onVideoPlay, onAuthRequired }: CourseCardPr
             return;
         }
 
+        if (!user || user.balance < course.price) {
+            setShowBalanceModal(true);
+            return;
+        }
+
         try {
-            await dispatch(purchaseCourse(course.id)).unwrap();
+            await dispatch(purchaseCourse({ courseId: course.id, price: course.price, userId: user.id })).unwrap();
+            dispatch(updateBalance(user.balance - course.price));
         } catch (error) {
             console.error('Purchase failed:', error);
         }
@@ -76,6 +85,13 @@ export const CourseCard = ({ course, onVideoPlay, onAuthRequired }: CourseCardPr
                     )}
                 </div>
             </div>
+
+            <BalanceModal
+                isOpen={showBalanceModal}
+                onClose={() => setShowBalanceModal(false)}
+                needed={course.price}
+                current={user?.balance || 0}
+            />
         </div>
     );
 };

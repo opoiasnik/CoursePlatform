@@ -11,7 +11,7 @@ interface CourseListProps {
 
 export const CourseList = ({ onAuthRequired }: CourseListProps) => {
     const dispatch = useDispatch<AppDispatch>();
-    const { courses, loading, error } = useSelector((state: RootState) => state.courses);
+    const { courses, loading, error, filter, purchasedCourses } = useSelector((state: RootState) => state.courses);
     const [videoModal, setVideoModal] = useState<{
         isOpen: boolean;
         videoUrl: string | null;
@@ -51,6 +51,10 @@ export const CourseList = ({ onAuthRequired }: CourseListProps) => {
         });
     };
 
+    const filteredCourses = filter === 'purchased'
+        ? courses.filter(course => purchasedCourses.includes(course.id))
+        : courses;
+
     if (loading && courses.length === 0) {
         return (
             <div className="loading-container">
@@ -62,6 +66,18 @@ export const CourseList = ({ onAuthRequired }: CourseListProps) => {
 
     return (
         <div className="course-list-container">
+            <div className="page-header">
+                <h1 className="page-title">
+                    {filter === 'purchased' ? 'My Courses' : 'Explore Courses'}
+                </h1>
+                <p className="page-subtitle">
+                    {filter === 'purchased'
+                        ? 'Access your purchased courses and continue learning'
+                        : 'Discover amazing courses and start your learning journey'
+                    }
+                </p>
+            </div>
+
             {error && (
                 <div className="error-banner">
                     <span>{error}</span>
@@ -69,16 +85,33 @@ export const CourseList = ({ onAuthRequired }: CourseListProps) => {
                 </div>
             )}
 
-            <div className="course-grid">
-                {courses.map((course) => (
-                    <CourseCard
-                        key={course.id}
-                        course={course}
-                        onVideoPlay={handleVideoPlay}
-                        onAuthRequired={onAuthRequired}
-                    />
-                ))}
-            </div>
+            {filteredCourses.length === 0 ? (
+                <div className="empty-state">
+                    <div className="empty-state-icon">
+                        {filter === 'purchased' ? '📚' : '🔍'}
+                    </div>
+                    <h3 className="empty-state-title">
+                        {filter === 'purchased' ? 'No purchased courses' : 'No courses found'}
+                    </h3>
+                    <p className="empty-state-description">
+                        {filter === 'purchased'
+                            ? 'You haven\'t purchased any courses yet. Browse our course catalog to get started!'
+                            : 'We couldn\'t find any courses matching your criteria.'
+                        }
+                    </p>
+                </div>
+            ) : (
+                <div className="course-grid">
+                    {filteredCourses.map((course) => (
+                        <CourseCard
+                            key={course.id}
+                            course={course}
+                            onVideoPlay={handleVideoPlay}
+                            onAuthRequired={onAuthRequired}
+                        />
+                    ))}
+                </div>
+            )}
 
             <VideoModal
                 isOpen={videoModal.isOpen}
