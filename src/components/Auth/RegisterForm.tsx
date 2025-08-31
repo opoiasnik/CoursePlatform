@@ -6,9 +6,10 @@ import { RegisterFormData } from '../../types';
 
 interface RegisterFormProps {
     onToggleMode: () => void;
+    onSuccess: () => void;
 }
 
-export const RegisterForm = ({ onToggleMode }: RegisterFormProps) => {
+export const RegisterForm = ({ onToggleMode, onSuccess }: RegisterFormProps) => {
     const dispatch = useDispatch();
     const [formData, setFormData] = useState<RegisterFormData>({
         email: '',
@@ -60,11 +61,24 @@ export const RegisterForm = ({ onToggleMode }: RegisterFormProps) => {
         setIsSubmitting(true);
 
         setTimeout(() => {
-            dispatch(login({
-                id: Date.now().toString(),
-                email: formData.email,
-            }));
-            setIsSubmitting(false);
+            const userKey = `user_${formData.email}`;
+            const existingUser = localStorage.getItem(userKey);
+
+            if (existingUser) {
+                setErrors({ email: 'User already exists. Please login instead.' });
+                setIsSubmitting(false);
+            } else {
+                const userData = {
+                    id: `user_${Date.now()}`,
+                    email: formData.email,
+                    balance: 1000,
+                };
+
+                localStorage.setItem(userKey, JSON.stringify(userData));
+                dispatch(login(userData));
+                setIsSubmitting(false);
+                onSuccess();
+            }
         }, 1000);
     };
 

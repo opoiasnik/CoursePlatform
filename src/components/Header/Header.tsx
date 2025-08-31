@@ -2,6 +2,7 @@ import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
 import { logout } from '../../store/slices/authSlice';
+import { setFilter, clearUserPurchases } from '../../store/slices/courseSlice';
 
 interface HeaderProps {
     onAuthOpen: () => void;
@@ -10,10 +11,15 @@ interface HeaderProps {
 export const Header = ({ onAuthOpen }: HeaderProps) => {
     const dispatch = useDispatch();
     const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
-    const { purchasedCourses } = useSelector((state: RootState) => state.courses);
+    const { purchasedCourses, filter } = useSelector((state: RootState) => state.courses);
 
     const handleLogout = () => {
+        dispatch(clearUserPurchases());
         dispatch(logout());
+    };
+
+    const handleFilterChange = (newFilter: 'all' | 'purchased') => {
+        dispatch(setFilter(newFilter));
     };
 
     return (
@@ -21,15 +27,31 @@ export const Header = ({ onAuthOpen }: HeaderProps) => {
             <div className="container">
                 <div className="header-content">
                     <div className="logo">
-                        <h1>📚 CourseHub</h1>
+                        <h1>🎓 EduHub</h1>
                     </div>
 
                     <nav className="navigation">
                         {isAuthenticated ? (
                             <div className="user-section">
-                                <span className="purchased-count">
-                                    Purchased: {purchasedCourses.length} courses
-                                </span>
+                                <div className="balance-display">
+                                    💰 <span className="balance-amount">${user?.balance || 0}</span>
+                                </div>
+
+                                <div className="filter-tabs">
+                                    <button
+                                        className={`filter-tab ${filter === 'all' ? 'active' : ''}`}
+                                        onClick={() => handleFilterChange('all')}
+                                    >
+                                        All Courses
+                                    </button>
+                                    <button
+                                        className={`filter-tab ${filter === 'purchased' ? 'active' : ''}`}
+                                        onClick={() => handleFilterChange('purchased')}
+                                    >
+                                        My Courses ({purchasedCourses.length})
+                                    </button>
+                                </div>
+
                                 <span className="user-email">{user?.email}</span>
                                 <button className="logout-btn" onClick={handleLogout}>
                                     Logout

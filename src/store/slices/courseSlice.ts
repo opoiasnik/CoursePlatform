@@ -2,12 +2,33 @@ import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { CourseState, Course } from '../../types';
 import { mockApi } from '../../api/mockApi';
 
+const getPurchasedCourses = (userId?: string): string[] => {
+  if (!userId) return [];
+  return JSON.parse(localStorage.getItem(`purchasedCourses_${userId}`) || '[]');
+};
+
+const getInitialPurchases = (): string[] => {
+  const storedUser = localStorage.getItem('user');
+  if (storedUser) {
+    try {
+      const user = JSON.parse(storedUser);
+      if (user?.id) {
+        return getPurchasedCourses(user.id);
+      }
+    } catch (error) {
+      console.error('Error getting initial purchases:', error);
+    }
+  }
+  return [];
+};
+
 const initialState: CourseState = {
   courses: [],
-  purchasedCourses: JSON.parse(localStorage.getItem('purchasedCourses') || '[]'),
+  purchasedCourses: getInitialPurchases(),
   currentVideo: null,
   loading: false,
   error: null,
+  filter: 'all',
 };
 
 export const fetchCourses = createAsyncThunk(
@@ -20,9 +41,9 @@ export const fetchCourses = createAsyncThunk(
 
 export const purchaseCourse = createAsyncThunk(
   'courses/purchaseCourse',
-  async (courseId: string) => {
-    const result = await mockApi.handlePurchase(courseId);
-    return result;
+  async (data: { courseId: string; price: number; userId: string }, { getState }) => {
+    const result = await mockApi.handlePurchase(data.courseId);
+    return { ...result, price: data.price, userId: data.userId };
   }
 );
 
@@ -35,6 +56,15 @@ const courseSlice = createSlice({
     },
     clearError: (state) => {
       state.error = null;
+    },
+    setFilter: (state, action: PayloadAction<'all' | 'purchased'>) => {
+      state.filter = action.payload;
+    },
+    loadUserPurchases: (state, action: PayloadAction<string>) => {
+      state.purchasedCourses = getPurchasedCourses(action.payload);
+    },
+    clearUserPurchases: (state) => {
+      state.purchasedCourses = [];
     },
   },
   extraReducers: (builder) => {
@@ -59,7 +89,7 @@ const courseSlice = createSlice({
         state.loading = false;
         if (action.payload.success) {
           state.purchasedCourses.push(action.payload.courseId);
-          localStorage.setItem('purchasedCourses', JSON.stringify(state.purchasedCourses));
+          localStorage.setItem(`purchasedCourses_${action.payload.userId}`, JSON.stringify(state.purchasedCourses));
         }
       })
       .addCase(purchaseCourse.rejected, (state, action) => {
@@ -69,5 +99,5 @@ const courseSlice = createSlice({
   },
 });
 
-export const { setCurrentVideo, clearError } = courseSlice.actions;
+export const { setCurrentVideo, clearError, setFilter, loadUserPurchases, clearUserPurchases } = courseSlice.actions;
 export default courseSlice.reducer;

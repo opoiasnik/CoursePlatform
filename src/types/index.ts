@@ -9,6 +9,7 @@ export interface Course {
 export interface User {
   id: string;
   email: string;
+  balance: number;
 }
 
 export interface AuthState {
@@ -22,6 +23,7 @@ export interface CourseState {
   currentVideo: string | null;
   loading: boolean;
   error: string | null;
+  filter: 'all' | 'purchased';
 }
 
 export interface LoginFormData {

@@ -6,9 +6,10 @@ import { LoginFormData } from '../../types';
 
 interface LoginFormProps {
     onToggleMode: () => void;
+    onSuccess: () => void;
 }
 
-export const LoginForm = ({ onToggleMode }: LoginFormProps) => {
+export const LoginForm = ({ onToggleMode, onSuccess }: LoginFormProps) => {
     const dispatch = useDispatch();
     const [formData, setFormData] = useState<LoginFormData>({
         email: '',
@@ -50,11 +51,18 @@ export const LoginForm = ({ onToggleMode }: LoginFormProps) => {
         setIsSubmitting(true);
 
         setTimeout(() => {
-            dispatch(login({
-                id: Date.now().toString(),
-                email: formData.email,
-            }));
-            setIsSubmitting(false);
+            const existingUserKey = `user_${formData.email}`;
+            const existingUser = localStorage.getItem(existingUserKey);
+
+            if (existingUser) {
+                const userData = JSON.parse(existingUser);
+                dispatch(login(userData));
+                setIsSubmitting(false);
+                onSuccess();
+            } else {
+                setErrors({ email: 'User not found. Please register first.' });
+                setIsSubmitting(false);
+            }
         }, 1000);
     };
 
